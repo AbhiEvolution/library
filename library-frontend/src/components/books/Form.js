@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, User, Barcode, Building, Calendar, Layers, CheckSquare, FileText } from 'lucide-react';
+import { BookOpen, User, Barcode, Building, Calendar, Layers, CheckSquare, Image } from 'lucide-react';
 
 const InputWithIcon = ({ label, icon: Icon, type, value, onChange, ...rest }) => (
   <div>
@@ -20,11 +20,14 @@ const InputWithIcon = ({ label, icon: Icon, type, value, onChange, ...rest }) =>
 );
 
 const BookForm = ({ book, setBook, onSubmit, buttonLabel = "Save" }) => {
+  const handleFileChange = (e) => {
+    setBook({ ...book, cover_image: e.target.files[0] });
+  };
+
   return (
     <form onSubmit={onSubmit} className="space-y-6 p-6 bg-gradient-to-br from-white via-blue-50 to-white rounded-2xl shadow-lg">
       <h2 className="text-2xl font-bold text-blue-800 mb-4">📚 Book Details</h2>
 
-      
       <InputWithIcon
         label="Title"
         icon={BookOpen}
@@ -88,25 +91,26 @@ const BookForm = ({ book, setBook, onSubmit, buttonLabel = "Save" }) => {
         max={book.total_copies || ''}
       />
 
-      {/* <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-1">Description</label>
-        <div className="flex items-start bg-white border border-gray-300 rounded-md shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
-          <span className="pt-3 pl-3 text-gray-500">
-            <FileText size={18} />
+      {/* Cover Image Upload */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-800 mb-1">Cover Image</label>
+        <div className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm">
+          <span className="pl-3 text-gray-500">
+            <Image size={18} />
           </span>
-          <textarea
-            value={book.description || ''}
-            onChange={(e) => setBook({ ...book, description: e.target.value })}
-            rows={4}
-            className="w-full py-2 px-3 rounded-md focus:outline-none focus:ring-0 bg-transparent"
-          ></textarea>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full py-2 px-3 rounded-md focus:outline-none bg-transparent"
+          />
         </div>
-      </div> */}
+      </div>
 
       <div className="flex justify-end">
         <button
           type="submit"
-          className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600"
         >
           {buttonLabel}
         </button>

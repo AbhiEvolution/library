@@ -1,12 +1,12 @@
+// src/components/books/Create.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
-import LoadingState from '../../components/ui/LoadingState';
-import ErrorState from '../../components/ui/ErrorState';
+import LoadingState from '../ui/LoadingState';
+import ErrorState from '../ui/ErrorState';
 import BookForm from './Form';
 
-const Edit = () => {
-  const { id } = useParams();
+const Create = () => {
   const navigate = useNavigate();
   const [book, setBook] = useState({});
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ const Edit = () => {
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        const response = await api.get(`/books/${id}`);
+        const response = await api.get(`/books/new`);
         setBook(response.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to fetch book');
@@ -25,7 +25,7 @@ const Edit = () => {
     };
 
     fetchBook();
-  }, [id]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,19 +39,19 @@ const Edit = () => {
     formData.append("book[total_copies]", book.total_copies || '');
     formData.append("book[available_copies]", book.available_copies || '');
 
-    if (book.cover_image instanceof File) {
+    if (book.cover_image) {
       formData.append("book[cover_image]", book.cover_image);
     }
 
     try {
-      await api.put(`/books/${id}`, formData, {
+      await api.post(`/books`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       });
       navigate('/books');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update book');
+      setError(err.response?.data?.message || 'Failed to create book');
     }
   };
 
@@ -66,7 +66,7 @@ const Edit = () => {
             book={book}
             setBook={setBook}
             onSubmit={handleSubmit}
-            buttonLabel="Update Book"
+            buttonLabel="Create Book"
           />
         </div>
       </div>
@@ -74,5 +74,4 @@ const Edit = () => {
   );
 };
 
-export default Edit;
-
+export default Create;

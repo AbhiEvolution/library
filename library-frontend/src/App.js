@@ -4,11 +4,11 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Books from './pages/Books';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import BookDetails from './components/books/Details';
-import Create from './components/books/Create';
+import BookDetails from './components/books/Show';
+import Create from './components/books/New';
 import Edit from './components/books/Edit'; // Added import statement for Edit component
-import Header from './components/Header';
-import Footer from './components/Footer';
+import Header from './components/shared/Header';
+import Footer from './components/shared/Footer';
 import './index.css';
 
 // Protected Route component

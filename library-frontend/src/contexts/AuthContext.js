@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const response = await api.get('/current_user');
-      if (response.data && response.data.role) {
+      if (response.data) {
         setUser(response.data);
       } else {
         throw new Error('Invalid user data');
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
       setAuthToken(token);
 
       const userData = await api.get('/current_user');
-      if (userData.data && userData.data.role) {
+      if (userData.data) {
         setUser(userData.data);
         return { success: true };
       } else {

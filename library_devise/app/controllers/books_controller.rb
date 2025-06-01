@@ -1,5 +1,5 @@
 class BooksController < ApplicationController
-  before_action :set_book, only: [:show, :edit, :update, :destroy]
+  before_action :set_book, only: [ :show, :edit, :update, :destroy ]
 
   def index
     books = Book.all
@@ -11,11 +11,16 @@ class BooksController < ApplicationController
     render json: serialize(@book), status: :ok
   end
 
+  def new
+    render json: serialize(Book.new), status: :ok
+  end
+
   def create
-    debugger
     category = Category.last
     book = Book.new(book_params.merge(category_id: category.id))
-
+    if params[:cover_image].present?
+      book.cover_image.attach(params[:cover_image])
+    end
     if book.save
       render json: serialize(book), status: :created
     else
@@ -45,7 +50,7 @@ class BooksController < ApplicationController
   def set_book
     @book = Book.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Book not found' }, status: :not_found
+    render json: { error: "Book not found" }, status: :not_found
   end
 
   def book_params

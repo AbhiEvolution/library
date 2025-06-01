@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import ErrorDisplay from '../components/ErrorDisplay';
+import ErrorState from '../components/ui/ErrorState';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -52,7 +52,7 @@ const SignupPage = () => {
             <p className="mt-2 text-gray-600 text-lg">Join our community of book lovers</p>
           </div>
 
-          <ErrorDisplay error={error} onClose={() => setError(null)} />
+          <ErrorState error={error} onClose={() => setError(null)} />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {['name', 'email', 'password', 'password_confirmation'].map(field => (
