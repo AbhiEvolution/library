@@ -1,7 +1,11 @@
 class BookSerializer
   include JSONAPI::Serializer
   
-  attributes :id, :title, :author, :isbn, :publisher, :published_year, :total_copies, :available_copies
+  attributes :id, :title, :author, :isbn, :publisher, :published_year, :total_copies, :available_copies, :category_id
+  
+  attribute :category do |object|
+    object.category.as_json(only: [:id, :name]) if object.category
+  end
   
   attribute :cover_image_url do |object|
     if object.cover_image.attached?

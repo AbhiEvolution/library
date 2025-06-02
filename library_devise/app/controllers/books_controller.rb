@@ -1,10 +1,17 @@
 class BooksController < ApplicationController
   before_action :set_book, only: [ :show, :edit, :update, :destroy ]
+  before_action :get_categories, only: [ :new, :edit ]
 
   def index
-    books = Book.all
-    serialized_books = books.map { |book| serialize(book) }
-    render json: serialized_books, status: :ok
+    books = Book.paginate(page: params[:page], per_page: 3)
+
+    render json: BookSerializer.new(
+      books,
+      meta: {
+        current_page: books.current_page,
+        total_pages: books.total_pages
+      }
+    ).serializable_hash, status: :ok
   end
 
   def show
@@ -12,14 +19,17 @@ class BooksController < ApplicationController
   end
 
   def new
-    render json: serialize(Book.new), status: :ok
+    book = Book.new
+    render json: {
+      book: serialize(book),
+      categories: @categories
+    }, status: :ok
   end
 
   def create
-    category = Category.last
-    book = Book.new(book_params.merge(category_id: category.id))
-    if params[:cover_image].present?
-      book.cover_image.attach(params[:cover_image])
+    book = Book.new(book_params)
+    if params[:book][:cover_image].present?
+      book.cover_image.attach(params[:book][:cover_image])
     end
     if book.save
       render json: serialize(book), status: :created
@@ -29,7 +39,10 @@ class BooksController < ApplicationController
   end
 
   def edit
-    render json: serialize(@book), status: :ok
+    render json: {
+      book: serialize(@book),
+      categories: @categories
+    }, status: :ok
   end
 
   def update
@@ -51,6 +64,10 @@ class BooksController < ApplicationController
     @book = Book.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Book not found" }, status: :not_found
+  end
+
+  def get_categories
+    @categories = Category.all
   end
 
   def book_params

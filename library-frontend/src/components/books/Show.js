@@ -101,6 +101,7 @@ const BookDetails = () => {
                     📘 Book Info
                   </h3>
                   <ul className="text-sm space-y-2 text-gray-800">
+                    <li><strong>Category:</strong> {book.category?.name || 'Not specified'}</li>
                     <li><strong>ISBN:</strong> {book.isbn}</li>
                     <li><strong>Publisher:</strong> {book.publisher}</li>
                     <li><strong>Published:</strong> {book.published_year}</li>

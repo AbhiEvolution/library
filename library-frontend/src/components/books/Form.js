@@ -19,7 +19,30 @@ const InputWithIcon = ({ label, icon: Icon, type, value, onChange, ...rest }) =>
   </div>
 );
 
-const BookForm = ({ book, setBook, onSubmit, buttonLabel = "Save" }) => {
+const SelectWithIcon = ({ label, icon: Icon, value, onChange, options, ...rest }) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-800 mb-1">{label}</label>
+    <div className="flex items-center bg-white border border-gray-300 rounded-md shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
+      <span className="pl-3 text-gray-500">
+        <Icon size={18} />
+      </span>
+      <select
+        value={value}
+        onChange={onChange}
+        className="w-full py-2 px-3 rounded-md focus:outline-none focus:ring-0 bg-transparent"
+        {...rest}
+      >
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+);
+
+const BookForm = ({ book, setBook, onSubmit, buttonLabel = "Save", categories = [] }) => {
   const handleFileChange = (e) => {
     setBook({ ...book, cover_image: e.target.files[0] });
   };
@@ -43,6 +66,15 @@ const BookForm = ({ book, setBook, onSubmit, buttonLabel = "Save" }) => {
         type="text"
         value={book.author || ''}
         onChange={(e) => setBook({ ...book, author: e.target.value })}
+        required
+      />
+
+      <SelectWithIcon
+        label="Category"
+        icon={Layers}
+        value={book.category_id || ''}
+        onChange={(e) => setBook({ ...book, category_id: e.target.value })}
+        options={categories.map((category) => ({ id: category.id, name: category.name }))}
         required
       />
 

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import ErrorState from '../components/ui/ErrorState';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
-    password_confirmation: ''
+    password_confirmation: '',
+    roles: ['member'] // Default to member
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,11 +16,27 @@ const SignupPage = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type, checked } = e.target;
+    
+    if (type === 'checkbox') {
+      setFormData(prev => {
+        const newRoles = [...prev.roles];
+        if (checked) {
+          newRoles.push(value);
+        } else {
+          const index = newRoles.indexOf(value);
+          if (index > -1) {
+            newRoles.splice(index, 1);
+          }
+        }
+        return { ...prev, roles: newRoles };
+      });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -31,7 +47,7 @@ const SignupPage = () => {
     try {
       const result = await signup(formData);
       if (result.success) {
-        navigate('/');
+        navigate('/login');
       } else {
         throw new Error(result.error);
       }
@@ -52,10 +68,26 @@ const SignupPage = () => {
             <p className="mt-2 text-gray-600 text-lg">Join our community of book lovers</p>
           </div>
 
-          <ErrorState error={error} onClose={() => setError(null)} />
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {['name', 'email', 'password', 'password_confirmation'].map(field => (
+            {['username', 'email', 'password', 'password_confirmation'].map(field => (
               <div key={field}>
                 <label htmlFor={field} className="block text-sm font-semibold text-gray-700 capitalize">
                   {field.replace('_', ' ')}
@@ -72,6 +104,41 @@ const SignupPage = () => {
                 />
               </div>
             ))}
+
+            <div className="space-y-4">
+              <label className="block text-sm font-semibold text-gray-700">
+                Roles
+              </label>
+              <div className="space-y-3">
+                {[
+                  { value: 'member', label: 'Member', description: 'For borrowing books and managing your reading list' },
+                  { value: 'librarian', label: 'Librarian', description: 'For managing library operations and book catalog' }
+                ].map(({ value, label, description }) => (
+                  <div key={value} className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id={value}
+                        name="roles"
+                        type="checkbox"
+                        value={value}
+                        checked={formData.roles.includes(value)}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                    </div>
+                    <div className="ml-3 text-sm">
+                      <label htmlFor={value} className="font-medium text-gray-700">
+                        {label}
+                      </label>
+                      <p className="text-gray-500">{description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500">
+                Select one or both roles based on your needs
+              </p>
+            </div>
 
             <button
               type="submit"
@@ -102,26 +169,15 @@ const SignupPage = () => {
           </p>
         </div>
 
-        {/* Right: Illustration */}
-        <div className="relative bg-gradient-to-br from-indigo-500 to-blue-500 text-white hidden lg:flex flex-col justify-center items-center p-10">
-          <div className="text-center space-y-4 z-10">
-            <h3 className="text-3xl font-bold">Welcome to Our Library</h3>
-            <p className="text-lg">Discover amazing books and connect with fellow readers.</p>
-            <div className="flex space-x-4 justify-center mt-6">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-            </div>
+        {/* Right: Image */}
+        <div className="lg:block hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-blue-600 opacity-50 rounded-r-3xl" />
+          <div className="relative p-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Welcome to the Library</h2>
+            <p className="text-lg text-white/90">
+              Join our community of book lovers and discover amazing books
+            </p>
           </div>
-          <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1512820790803-83ca734da794')" }}></div>
         </div>
       </div>
     </div>

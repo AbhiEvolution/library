@@ -9,21 +9,24 @@ const Edit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState({});
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        const response = await api.get(`/books/${id}`);
-        setBook(response.data);
+        const response = await api.get(`/books/${id}/edit`);
+        console.log(response.data);
+        setBook(response.data.book);
+        setCategories(response.data.categories);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to fetch book');
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchBook();
   }, [id]);
 
@@ -38,6 +41,7 @@ const Edit = () => {
     formData.append("book[published_year]", book.published_year || '');
     formData.append("book[total_copies]", book.total_copies || '');
     formData.append("book[available_copies]", book.available_copies || '');
+    formData.append("book[category_id]", book.category_id);
 
     if (book.cover_image instanceof File) {
       formData.append("book[cover_image]", book.cover_image);
@@ -65,6 +69,7 @@ const Edit = () => {
           <BookForm
             book={book}
             setBook={setBook}
+            categories={categories}
             onSubmit={handleSubmit}
             buttonLabel="Update Book"
           />

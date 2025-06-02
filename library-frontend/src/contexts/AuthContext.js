@@ -33,7 +33,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get('/current_user');
       if (response.data) {
-        setUser(response.data);
+        setUser({
+          id: response.data.id,
+          username: response.data.username,
+          email: response.data.email,
+          role: response.data.role
+        });
       } else {
         throw new Error('Invalid user data');
       }
@@ -46,24 +51,71 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const signup = async (formData) => {
+    try {
+      const response = await api.post('/signup', {
+        user: {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          password_confirmation: formData.password_confirmation,
+          roles: formData.roles
+        }
+      });
+
+      if (response.data && response.data.status && response.data.status.code === 200) {
+        const userData = response.data.data;
+        const token = userData.jwt;
+        if (!token) throw new Error('No token returned');
+
+        localStorage.setItem('jwt', token);
+        setAuthToken(token);
+
+        setUser({
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          role: userData.role
+        });
+        return { success: true };
+      } else {
+        throw new Error(response.data?.status?.message || 'Invalid user data');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      localStorage.removeItem('jwt');
+      setAuthToken(null);
+      setUser(null);
+      return {
+        success: false,
+        error: error.response?.data?.status?.message || error.message,
+      };
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await api.post('/login', {
         user: { email, password }
       });
 
-      const token = response.data.jwt;
-      if (!token) throw new Error('No token returned');
+      if (response.data && response.data.status && response.data.status.code === 200) {
+        const userData = response.data.data;
+        const token = userData.jwt;
+        if (!token) throw new Error('No token returned');
 
-      localStorage.setItem('jwt', token);
-      setAuthToken(token);
+        localStorage.setItem('jwt', token);
+        setAuthToken(token);
 
-      const userData = await api.get('/current_user');
-      if (userData.data) {
-        setUser(userData.data);
+        setUser({
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          role: userData.role
+        });
         return { success: true };
       } else {
-        throw new Error('Invalid user data');
+        throw new Error(response.data?.status?.message || 'Invalid login credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -72,7 +124,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       return {
         success: false,
-        error: error.response?.data?.error || error.message,
+        error: error.response?.data?.status?.message || error.message,
       };
     }
   };
@@ -84,7 +136,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
