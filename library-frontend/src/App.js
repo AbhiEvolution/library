@@ -9,6 +9,7 @@ import Create from './components/books/New';
 import Edit from './components/books/Edit'; // Added import statement for Edit component
 import Header from './components/shared/Header';
 import Footer from './components/shared/Footer';
+import Profile from './pages/Profile';
 import './index.css';
 
 // Protected Route component
@@ -56,6 +57,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Edit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />

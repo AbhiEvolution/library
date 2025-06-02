@@ -7,7 +7,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Set auth header
   const setAuthToken = (token) => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -31,20 +30,21 @@ export const AuthProvider = ({ children }) => {
     setAuthToken(token);
 
     try {
-      const response = await api.get('/current_user');
-      if (response.data) {
+      const { data } = await api.get('/current_user');
+      if (data) {
         setUser({
-          id: response.data.id,
-          username: response.data.username,
-          email: response.data.email,
-          role: response.data.role
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          role: data.role,
         });
       } else {
         throw new Error('Invalid user data');
       }
     } catch (error) {
-      console.error('Error checking auth:', error);
+      console.error('Auth check failed:', error);
       localStorage.removeItem('jwt');
+      setAuthToken(undefined);
       setUser(null);
     } finally {
       setLoading(false);
@@ -53,39 +53,23 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (formData) => {
     try {
-      const response = await api.post('/signup', {
+      const { data } = await api.post('/signup', {
         user: {
           username: formData.username,
           email: formData.email,
           password: formData.password,
           password_confirmation: formData.password_confirmation,
-          roles: formData.roles
+          role: formData.role,
         }
       });
-
-      if (response.data && response.data.status && response.data.status.code === 200) {
-        const userData = response.data.data;
-        const token = userData.jwt;
-        if (!token) throw new Error('No token returned');
-
-        localStorage.setItem('jwt', token);
-        setAuthToken(token);
-
-        setUser({
-          id: userData.id,
-          username: userData.username,
-          email: userData.email,
-          role: userData.role
-        });
+  
+      if (data?.status?.code === 200) {
         return { success: true };
       } else {
-        throw new Error(response.data?.status?.message || 'Invalid user data');
+        throw new Error(data?.status?.message || 'Signup failed');
       }
     } catch (error) {
       console.error('Signup error:', error);
-      localStorage.removeItem('jwt');
-      setAuthToken(null);
-      setUser(null);
       return {
         success: false,
         error: error.response?.data?.status?.message || error.message,
@@ -95,12 +79,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/login', {
-        user: { email, password }
+      const { data } = await api.post('/login', {
+        user: { email, password },
       });
 
-      if (response.data && response.data.status && response.data.status.code === 200) {
-        const userData = response.data.data;
+      if (data?.status?.code === 200) {
+        const userData = data.data;
         const token = userData.jwt;
         if (!token) throw new Error('No token returned');
 
@@ -111,16 +95,17 @@ export const AuthProvider = ({ children }) => {
           id: userData.id,
           username: userData.username,
           email: userData.email,
-          role: userData.role
+          role: userData.role,
         });
+
         return { success: true };
       } else {
-        throw new Error(response.data?.status?.message || 'Invalid login credentials');
+        throw new Error(data?.status?.message || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
       localStorage.removeItem('jwt');
-      setAuthToken(null);
+      setAuthToken(undefined);
       setUser(null);
       return {
         success: false,
@@ -131,7 +116,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('jwt');
-    setAuthToken(null);
+    setAuthToken(undefined);
     setUser(null);
   };
 
@@ -144,7 +129,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

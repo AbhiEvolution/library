@@ -3,4 +3,5 @@ class Book < ApplicationRecord
 
   # Active Storage association for attaching one cover image
   has_one_attached :cover_image
+  has_many :reviews, dependent: :destroy
 end

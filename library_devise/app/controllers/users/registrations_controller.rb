@@ -1,27 +1,22 @@
-# frozen_string_literal: true
-
-require_relative '../../services/json_web_token'
-
 class Users::RegistrationsController < Devise::RegistrationsController
   include RackSessionFix
 
   respond_to :json
 
-  protected
-
-  def configure_sign_up_params
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:username, :email, :password, :password_confirmation, :roles])
-  end
+  before_action :configure_permitted_parameters, only: [ :create ]
 
   private
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :username, :email, :password, :password_confirmation, :role ])
+  end
 
   def respond_with(resource, _opts = {})
     if request.method == "POST" && resource.persisted?
       render json: {
         status: { code: 200, message: "Signed up successfully." },
         data: {
-          user: UserSerializer.new(resource).serializable_hash[:data][:attributes],
-          jwt: request.env['warden-jwt_auth.token']
+          user: UserSerializer.new(resource).serializable_hash[:data][:attributes]
         }
       }, status: :ok
     elsif request.method == "DELETE"
@@ -44,7 +39,6 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # end
 
   # POST /resource
- 
 
   # GET /resource/edit
   # def edit

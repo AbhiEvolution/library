@@ -1,5 +1,6 @@
 class BooksController < ApplicationController
-  before_action :set_book, only: [ :show, :edit, :update, :destroy ]
+  before_action :authenticate_user!
+  before_action :set_book, only: [ :edit, :update, :destroy ]
   before_action :get_categories, only: [ :new, :edit ]
 
   def index
@@ -15,7 +16,12 @@ class BooksController < ApplicationController
   end
 
   def show
-    render json: serialize(@book), status: :ok
+    begin
+      book = Book.includes(:reviews).find(params[:id])
+      render json: BookSerializer.new(book).serializable_hash, status: :ok
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Book not found" }, status: :not_found
+    end
   end
 
   def new
@@ -28,8 +34,8 @@ class BooksController < ApplicationController
 
   def create
     book = Book.new(book_params)
-    if params[:book][:cover_image].present?
-      book.cover_image.attach(params[:book][:cover_image])
+    if params.dig(:book, :cover_image).present?
+      @book.cover_image.attach(params.dig(:book, :cover_image))
     end
     if book.save
       render json: serialize(book), status: :created

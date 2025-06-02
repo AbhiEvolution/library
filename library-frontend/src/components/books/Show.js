@@ -1,40 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import LoadingState from '../ui/LoadingState';
-import ErrorState from '../ui/ErrorState';
 import api from '../../api/api';
+import LoadingState from '../../components/ui/LoadingState';
+import ErrorState from '../../components/ui/ErrorState';
 import { useAuth } from '../../contexts/AuthContext';
+import ReviewForm from '../reviews/ReviewForm';
+import Reviews from '../reviews/Reviews';
 
-const BookDetails = () => {
+const BookShow = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const { user } = useAuth();
-
-  useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        const response = await api.get(`/books/${id}`);
-        setBook(response.data);
-      } catch (err) {
-        setError(err.response?.data?.message || err.message || 'Failed to fetch book');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBook();
-  }, [id]);
+  const navigate = useNavigate();
 
   const handleBack = () => {
     navigate('/books');
   };
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorState message={error} />;
-  if (!book) return null;
+  const handleReviewAdded = (newReview) => {
+    setReviews(prev => [...prev, newReview]);
+  };
+
+  useEffect(() => {
+    fetchBookAndReviews();
+  }, [id]);
+
+  const fetchBookAndReviews = async () => {
+    try {
+      const response = await api.get(`/books/${id}`);
+      
+      // Extract book data and reviews from the response
+      const bookData = response.data.data.attributes;
+      const reviewsData = bookData.reviews || [];
+      
+      setBook(bookData);
+      setReviews(reviewsData);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching book:', err);
+      setError(err.response?.data?.message || 'Failed to fetch book details');
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} />;
+  }
+
+  if (!book) {
+    return <div className="text-center py-8">Book not found</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-200 py-10 px-4">
@@ -46,26 +68,28 @@ const BookDetails = () => {
         </div>
 
         {/* Back Button */}
-        <button
-          onClick={handleBack}
-          type="button"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+        <div className="mb-6 text-right">
+          <button
+            onClick={handleBack}
+            type="button"
+            className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Book List
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Book List
+          </button>
+        </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 transition-all hover:shadow-3xl">
+        {/* Book Details Card */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 transition-all hover:shadow-3xl mb-8">
           <div className="flex flex-col md:flex-row">
             {/* Left */}
             <div className="flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 w-full md:w-1/3 p-10 text-white">
@@ -101,10 +125,10 @@ const BookDetails = () => {
                     📘 Book Info
                   </h3>
                   <ul className="text-sm space-y-2 text-gray-800">
-                    <li><strong>Category:</strong> {book.category?.name || 'Not specified'}</li>
                     <li><strong>ISBN:</strong> {book.isbn}</li>
                     <li><strong>Publisher:</strong> {book.publisher}</li>
                     <li><strong>Published:</strong> {book.published_year}</li>
+                    <li><strong>Description:</strong> {book.description}</li>
                   </ul>
                 </div>
 
@@ -130,19 +154,23 @@ const BookDetails = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Action Button */}
-              {(user?.role === 'librarian' || user?.role === 'admin') && (
-                <div className="mt-10 text-right">
-                  <button
-                    onClick={() => navigate(`/books/${id}/edit`)}
-                    className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    ✏️ Edit Book
-                  </button>
-                </div>
-              )}
             </div>
+          </div>
+        </div>
+
+        {/* Reviews Card */}
+        
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 transition-all hover:shadow-3xl">
+          <div className="p-8">
+            <Reviews reviews={reviews} />
+            {user && (
+              <div className="mb-8">
+                <ReviewForm 
+                  bookId={id} 
+                  onReviewAdded={handleReviewAdded} 
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -150,4 +178,4 @@ const BookDetails = () => {
   );
 };
 
-export default BookDetails;
+export default BookShow;

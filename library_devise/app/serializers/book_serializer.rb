@@ -17,4 +17,18 @@ class BookSerializer
       nil
     end
   end
+
+  attribute :reviews do |object|
+    object.reviews.map do |review|
+      {
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        user: {
+          id: review.user.id,
+          username: review.user.username
+        }
+      }
+    end
+  end
 end
