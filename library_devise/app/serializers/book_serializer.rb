@@ -24,6 +24,7 @@ class BookSerializer
         id: review.id,
         rating: review.rating,
         comment: review.comment,
+        created_at: review.created_at,
         user: {
           id: review.user.id,
           username: review.user.username
